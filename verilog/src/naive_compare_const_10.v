@@ -10,8 +10,6 @@ module compare_9_8_7_const_10(a1_in, a2_in, a3_in, res_le_out, res_eq_out, res_g
     reg [8:0] const_reg = 9'd10;
     wire [8:0] bin_form;
 
-    
-
     reverse_converter_9_8_7 conv(a3_in, a2_in, a1_in, bin_form);
 
     assign res_le_out = (bin_form < const_reg);

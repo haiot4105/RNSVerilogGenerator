@@ -35,8 +35,7 @@ module compare_const_test_bench();
             exp_eq = (iter == const_x);
             exp_le = (iter < const_x);
             #1 dummy = 1;
-            // $display ("%d %d", dut.bin_form, iter);
-            $display ("!!! Res =(%b %b %b) Expect=(%b %b %b)", gr, eq, le, exp_gr, exp_eq, exp_le);
+            $display ("Res = (> %b; = %b; < %b) Expect = (> %b; = %b; < %b)", gr, eq, le, exp_gr, exp_eq, exp_le);
 
             reg_gr = gr;
             reg_eq = eq;
@@ -45,9 +44,12 @@ module compare_const_test_bench();
             if (reg_gr != exp_gr || reg_eq != exp_eq || reg_le != exp_le )
             begin
                 $display ("!!! Error !!!");
+                $display ("X = (%d; %d; %d)",x1, x2, x3);
                 $finish;
             end
             #1 dummy = 1;
         end
+
+        $display ("!!! Succsess !!!");
 	end
 endmodule
