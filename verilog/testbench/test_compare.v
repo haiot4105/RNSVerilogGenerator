@@ -1,12 +1,12 @@
 module compare_test_bench();
 
-    reg [2:0] x1;
+    reg [3:0] x1;
 	reg [2:0] x2;
-	reg [3:0] x3;
+	reg [2:0] x3;
 
-    reg [2:0] y1;
+    reg [3:0] y1;
 	reg [2:0] y2;
-	reg [3:0] y3;
+	reg [2:0] y3;
 
 
 	integer l;
@@ -25,13 +25,13 @@ module compare_test_bench();
         begin
             reverse_iter = 503 - iter;
 
-            x1 = iter % 7;
+            x1 = iter % 9;
             x2 = iter % 8;
-            x3 = iter % 9;
+            x3 = iter % 7;
             
-            y1 = reverse_iter % 7;
+            y1 = reverse_iter % 9;
             y2 = reverse_iter % 8;
-            y3 = reverse_iter % 9;
+            y3 = reverse_iter % 7;
 
             exp_gr = (iter > reverse_iter);
             exp_eq = (iter == reverse_iter);
@@ -59,13 +59,13 @@ module compare_test_bench();
         for (iter = 0; iter < 504; iter = iter + 1)
         begin
 
-            x1 = iter % 7;
+            x1 = iter % 9;
             x2 = iter % 8;
-            x3 = iter % 9;
+            x3 = iter % 7;
             
-            y1 = iter % 7;
+            y1 = iter % 9;
             y2 = iter % 8;
-            y3 = iter % 9;
+            y3 = iter % 7;
 
             exp_gr = 0;
             exp_eq = 1;
@@ -93,13 +93,13 @@ module compare_test_bench();
         begin
             reverse_iter = 503 - iter;
 
-            y1 = iter % 7;
+            y1 = iter % 9;
             y2 = iter % 8;
-            y3 = iter % 9;
+            y3 = iter % 7;
             
-            x1 = reverse_iter % 7;
+            x1 = reverse_iter % 9;
             x2 = reverse_iter % 8;
-            x3 = reverse_iter % 9;
+            x3 = reverse_iter % 7;
 
             exp_gr = (iter < reverse_iter);
             exp_eq = (iter == reverse_iter);
