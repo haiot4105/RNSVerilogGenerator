@@ -88,7 +88,6 @@ def create_compare_const_testbench(n, c, dut):
     max_num_w = max_num.bit_length()
 
     module_name = "compare_const_" + str(c) + "_testbench_" + str(n1) + "_" + str(n2) + "_" + str(n3)
-    # conv_name = "reverse_converter_" + str(n1) + "_" + str(n2) + "_" + str(n3)
 
     main_module = Module(module_name)
     const_x = main_module.Integer("const_x")
@@ -117,8 +116,6 @@ def create_compare_const_testbench(n, c, dut):
     dummy = main_module.Reg("dummy")
 
     main_module.Instance(dut, 'dut', ports = [x1, x2, x3, le, eq, gr])
-	
-	# compare_const_10_9_8_7 dut(x1, x2, x3, le, eq, gr);
 
 
     init = '''const_x = {0};
@@ -154,35 +151,6 @@ end
 $display ("!!! Succsess !!!");'''.format(c, n1, n2, n3, max_num)
 
     main_module.Initial(EmbeddedCode(init))
-    # main_module.GenerateFor("i=1", "i < 100", "i = i+1")
-    # a1_in = main_module.Input('a1_in', n1_w)
-    # a2_in = main_module.Input('a2_in', n2_w)
-    # a3_in = main_module.Input('a3_in', n3_w)
-
-
-    # res_le_out = main_module.Output('res_le_out')
-    # res_eq_out = main_module.Output('res_eq_out')
-    # res_gr_out = main_module.Output('res_gr_out')
-
-    # bin_form = main_module.Wire('bin_form', max_num_w)
-
-
-    # const_reg = main_module.Reg('const_reg', max_num_w)
-    # main_module.Initial(const_reg(c))
-    # const_reg.initval = str(c)
-
-    # conv_module = Module(conv_name)
-    # conv_x1 = conv_module.Input('x1', n1_w)
-    # conv_x2 = conv_module.Input('x2', n2_w)
-    # conv_x3 = conv_module.Input('x3', n3_w)
-    # conv_out = conv_module.Output('out', max_num_w)
-    # main_module.Instance(conv_module, 'converter', ports = [a1_in, a2_in, a3_in, bin_form])
-    # # main_module.Instance(conv_module, 'converter2', ports = [b1_in, b2_in, b3_in, b_bin_form])
-
-
-    # res_le_out.assign(bin_form < const_reg)
-    # res_eq_out.assign(bin_form == const_reg)
-    # res_gr_out.assign(bin_form > const_reg)
 
     return main_module
 

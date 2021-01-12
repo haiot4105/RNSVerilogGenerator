@@ -1,87 +1,107 @@
+module compare_9_8_7(a1_in, a2_in, a3_in, b1_in, b2_in, b3_in, res_le_out, res_eq_out, res_gr_out);
+	input wire [3:0] a1_in;      // Module: 7
+    input wire [2:0] a2_in;      // Module: 8
+    input wire [2:0] a3_in;      // Module: 9
 
-module comp_modular_0(a1_in, a2_in, a3_in, b1_in, b2_in, b3_in, res_le_out, res_eq_out, res_gr_out);
-
-	input wire a1_in[2:0];      // Module: 7
-    input wire a2_in[2:0];      // Module: 8
-    input wire a3_in[3:0];      // Module: 9
-
-	input wire b1_in[2:0];      // Module: 7
-    input wire b2_in[2:0];      // Module: 8
-    input wire b3_in[3:0];      // Module: 9
+	input wire [3:0] b1_in;      // Module: 7
+    input wire [2:0] b2_in;      // Module: 8
+    input wire [2:0] b3_in;      // Module: 9
     
     output wire res_le_out;     // equals to 1 if a less than b, 0 otherwise
     output wire res_eq_out;     // equals to 1 if a equal to b, 0 otherwise
     output wire res_gr_out;     // equals to 1 if a greater than b, 0 otherwise
 
-    wire [5:0] sum1, sum2, carry1, carry2, sub_sum, sub_carry;
-    wire c1, c2, c3;
-    wire cr_sum1, cr_cout1, cr_sum2, cr_cout_tmp, cr_cout2, cr_sum3;
-    wire sub_c1, sub_c2, sub_c3, sub_c_sum, sub_c_carry;
-    wire res_st_c, res_st_d_le, res_st_d_eq, res_st_d_gr, res_st_e_le, res_st_e_eq, res_st_e_gr;
+    wire [5:0] U, V, W, neg_d1;
+    wire [2:0] halfW; 
 
-    stage_a st_a_first (a1_in, a2_in, a3_in, sum1, carry1);
-    stage_a st_a_second (b1_in, b2_in, b3_in, sum2, carry2);
-    
-    carry_recognition cr1 (sum1, carry1, 1'b1, c1);
-    carry_recognition cr2 (sum2, carry2, 1'b1, c2);
+    wire [3:0] d1;
+    wire [2:0] d2;
+    wire [2:0] d3;
 
-    half_adder ha1 (c1, ~c2, cr_sum1, cr_cout1);
-    stage_b st_b (sum1, carry1, sum2, carry2, sub_sum, sub_carry, sub_c1, sub_c2, sub_c3);
-    full_adder fa (sub_c1, sub_c2, sub_c3, sub_c_sum, sub_c_carry);
+    wire [5:0] tmp_sum1, tmp_carry1;
+    wire [5:0] tmp_sum2, tmp_carry2;
+    wire [5:0] D1;
+    wire [8:0] D;
+    wire C, E;
 
-    carry_recognition cr2 (sub_sum, sub_carry, 1'b0, c3);
-    
-    half_adder ha2 (sub_c_sum, c3, cr_sum2, cr_cout_tmp);
-    half_adder ha3 (sub_c_carry, cr_cout_tmp, cr_sum3, cr_cout2);
 
-    stage_c st_c (sum1, carry1, sum2, carry2, res_st_c);
+    mod_2_n_plus_1_sub  sub1 (a1_in, b1_in, d1);  
+    mod_2_n_sub         sub2 (a2_in, b2_in, d2);  
+    mod_2_n_minus_1_sub sub3 (a3_in, b3_in, d3); 
 
-    stage_d st_d (cr_sum3, cr_sum2, cr_cout1, cr_sum1, res_st_d_le, res_st_d_eq, res_st_d_gr);
-    stage_e st_e (a2_in, b2_in, res_st_e_le, res_st_e_eq, res_st_e_gr);
+    carry_save_adder csa1 (U, V, neg_d1, tmp_sum1, tmp_carry1);
+    carry_save_adder csa2 (tmp_sum1, {tmp_carry1[4:0], tmp_carry1[5]}, W, tmp_sum2, tmp_carry2);
+    binary_2n_adder bin_adder (tmp_sum2, {tmp_carry2[4:0], tmp_carry2[5]}, D1);
 
-    assign res_le_out = (res_st_c & res_st_e_le) | (~res_st_c & res_st_d_le);
-    assign res_eq_out = (res_st_c & res_st_e_eq) | (~res_st_c & res_st_d_le);
-    assign res_gr_out = (res_st_c & res_st_e_gr) | (~res_st_c & res_st_d_le) | (~res_st_c & cr_cout2);
+    assign U        = { d3[0], d3[2:0], d3[2:1] };
+    assign V        = { ~d2[2:0], 3'b111 };
+    assign halfW    = { d1[3]^d1[0], d1[2:1] };
+    assign W        = { halfW, halfW };
+    assign neg_d1   = { 2'b11, ~d1 };
+    assign C = ~(|{d1, d2, d3});
+
+    assign D = {D1, d2};
+    assign E = ~(D[8] | &D[7:2]);
+
+    assign res_le_out = ~E;
+    assign res_eq_out = C;
+    assign res_gr_out = E & ~C;
+
+    wire [5:0] sum11, carry11;
+    stage_a testa (d3, d2, d1, sum11, carry11);
+
+endmodule
+
+module mod_2_n_plus_1_sub(A, B, res_out);
+
+	input wire [3:0] A;     
+    input wire [3:0] B;      
+    output wire [3:0] res_out;     
+
+    wire T, W;
+    wire [3:0] R;
+
+    assign T = ~(A[3] & ~B[3]);
+    assign W = ~(A[3] | ~B[3]);
+
+    assign R = {1'b0, A[2:0]} + {1'b0, ~B[2:0]} + T;
+    assign res_out = {1'b0, R[2:0]} + W + {3'b0, ~R[3]};
 
 endmodule
 
 
-module full_adder(a_in, b_in, c_in, s_out, c_out);
+module mod_2_n_sub(A, B, res_out);
+    input wire [2:0] A;     
+    input wire [2:0] B;      
+    output wire [2:0] res_out;     
 
-    input wire  a_in;
-    input wire  b_in;
-    input wire  c_in;
-
-    output wire s_out;
-    output wire c_out;
-
-    assign s_out = a_in ^ b_in ^ c_in;
-    assign c_out = (a_in & b_in) | (b_in & c_in) | (a_in & c_in);
+    assign res_out = (A + ~B + 1) ;
 
 endmodule
 
 
-module half_adder(a_in, b_in, s_out, c_out);
+module mod_2_n_minus_1_sub(A, B, res_out);
 
-    input wire  a_in;
-    input wire  b_in;
+    input wire [2:0] A;     
+    input wire [2:0] B;   
+    output wire [3:0] R1;   
+    output wire [2:0] R2, res_out;     
 
-    output wire s_out;
-    output wire c_out;
+    assign R1 = ({1'b0, A} + {1'b0,~B});
+    assign R2 = R1[2:0] + {2'b0, R1[3]}; 
+    assign res_out = &R2 ? ~R2 : R2;
 
-    assign s_out = a_in ^ b_in;
-    assign s_out = a_in & b_in;
 endmodule
 
 
 module carry_save_adder(a_in, b_in, c_in, s_out, c_out);
 
-    input wire [5:0]    a_in;
-    input wire [5:0]    b_in;
-    input wire [5:0]    c_in;
+    input wire [5:0] a_in;
+    input wire [5:0] b_in;
+    input wire [5:0] c_in;
 
-    output wire [5:0]   s_out;
-    output wire [5:0]   c_out;
+    output wire [5:0] s_out;
+    output wire [5:0] c_out;
 
     assign s_out = a_in ^ b_in ^ c_in;
     assign c_out = (a_in & b_in) | (b_in & c_in) | (a_in & c_in);
@@ -89,49 +109,29 @@ module carry_save_adder(a_in, b_in, c_in, s_out, c_out);
 endmodule
 
 
-module simple_mux(a_in, b_in, c_in, res_out);
+module binary_2n_adder(a_in, b_in, s_out);
 
-    input wire  a_in;
-    input wire  b_in;
-    input wire  c_in;
+    input wire [5:0] a_in;
+    input wire [5:0] b_in;
 
-    output wire res_out;
+    output wire [5:0] s_out;
+    wire [6:0] R1;
+    wire [5:0] R2;
 
-    assign res_out = c_in ? b_in : a_in;
-
+    assign R1 = a_in + b_in;
+    assign R2 = R1[5:0] + R1[6];
+    assign s_out = &R2 ? ~R2 : R2;
 endmodule
 
 
-module carry_recognition(sum_in, carry_in, c_in, carry_out);
-
-    input wire [5:0]    sum_in;
-    input wire [5:0]    carry_in;
-    input wire          c_in;
-
-    output wire         carry_out;
-
-    wire [5:0] tmp_carry;
-
-    assign carry_out = tmp_carry[5];
-
-    simple_mux  mux0(carry_in[0], c_in, carry_in[0] ^ sum_in[0], tmp_carry[0]);
-    simple_mux  mux1(carry_in[1], tmp_carry[0], carry_in[1] ^ sum_in[1], tmp_carry[1]);
-    simple_mux  mux2(carry_in[2], tmp_carry[1], carry_in[2] ^ sum_in[2], tmp_carry[2]);
-    simple_mux  mux3(carry_in[3], tmp_carry[2], carry_in[3] ^ sum_in[3], tmp_carry[3]);
-    simple_mux  mux4(carry_in[4], tmp_carry[3], carry_in[4] ^ sum_in[4], tmp_carry[4]);
-    simple_mux  mux5(carry_in[5], tmp_carry[4], carry_in[5] ^ sum_in[5], tmp_carry[5]);
-
-endmodule
-
-// Partial RNS to binary conversion
 module stage_a(a1_in, a2_in, a3_in, sum_out, carry_out);
 
-	input wire          a1_in[2:0];  
-    input wire          a2_in[2:0];  
-    input wire          a3_in[3:0];  
+	input wire [2:0] a1_in;  
+    input wire [2:0] a2_in;  
+    input wire [3:0] a3_in;  
 
-    output wire [5:0]   sum_out;
-    output wire [5:0]   carry_out;
+    output wire [5:0] sum_out;
+    output wire [5:0] carry_out;
 
     wire [5:0] A, B, C, neg_a3;
     wire [2:0] halfC; 
@@ -140,15 +140,15 @@ module stage_a(a1_in, a2_in, a3_in, sum_out, carry_out);
     wire [5:0] csa1_carry, csa2_carry;
     wire [5:0] csa1_carry_eac, csa2_carry_eac;
 
-    assign halfC[2:0] = {a3_in[3]^a3_in[0], a3_in[2:1]}
-    assign neg_a3[5:0] = {2'b11, ~a3_in[3:0]};
+    assign halfC [2:0] = {a3_in[3]^a3_in[0], a3_in[2:1]};
+    assign neg_a3 [5:0] = {2'b11, ~a3_in[3:0]};
 
-    assign A[5:0] = { a1_in[2:0], a1_in[2:0] };
+    assign A[5:0] = { a1_in[0], a1_in[2:1], a1_in[0], a1_in[2:1] };
     assign B[5:0] = { ~a2_in[2:0], 3'b111 };
     assign C[5:0] = { halfC, halfC };
 
-    assign csa1_carry_eac[5:0] = {csa1_carry[4:0], csa1_carry[5]}
-    assign csa2_carry_eac[5:0] = {csa2_carry[4:0], csa2_carry[5]}
+    assign csa1_carry_eac[5:0] = {csa1_carry[4:0], csa1_carry[5]};
+    assign csa2_carry_eac[5:0] = {csa2_carry[4:0], csa2_carry[5]};
 
     assign sum_out = csa2_sum;
     assign carry_out = csa2_carry_eac;
@@ -158,77 +158,47 @@ module stage_a(a1_in, a2_in, a3_in, sum_out, carry_out);
 
 endmodule
 
-// Partial subtraction
-module stage_b(sum1_in, carry1_in, sum2_in, carry2_in, sum_out, carry_out, c1_out, c2_out, c3_out);
+// module compare_test_bench();
 
-    input wire [5:0]   sum1_in;
-    input wire [5:0]   carry1_in;
-    input wire [5:0]   sum2_in;
-    input wire [5:0]   carry2_in;
+//     reg [2:0] x1;
+//     reg [2:0] y1;
+//     wire [2:0] res;
 
-    output wire [5:0]   sum_out;
-    output wire [5:0]   carry_out;
-    output wire         c1_out;
-    output wire         c2_out;
-    output wire         c3_out;
+// 	reg dummy;
 
-    wire [5:0] csa3_sum, csa4_sum, csa5_sum
-    wire [5:0] csa3_carry, csa4_carry, csa5_carry;
+// 	integer iter, reverse_iter;
 
-    assign c1_out = csa3_carry[5];
-    assign c2_out = csa4_carry[5];
-    assign c3_out = csa5_carry[5];
-    assign sum_out = csa5_sum;
-    assign carry_out = {csa5_carry[4:0], 1'b0};
 
-    carry_save_adder csa3 (sum1_in, carry1_in, carry2_in, csa3_sum, csa3_carry);
-    carry_save_adder csa4 (csa3_sum, {csa3_carry[4:0], 1'b0}, sum2_in, csa4_sum, csa4_carry);
-    carry_save_adder csa5 (csa4_sum, 6'b000010, {csa4_carry[4:0], 1'b0}, csa5_sum, csa5_carry);
+//     mod_2_n_minus_1_sub dut(x1, y1, res);
+// 	integer dbg;
 
-endmodule
+// 	initial
+// 	begin
 
-// Bitwise equality comparator
-module stage_c(sum1_in, carry1_in, sum2_in, carry2_in, c_out)
+//         for (iter = 0; iter < 40; iter = iter + 1)
+//         begin
+//             reverse_iter = 40 - iter;
 
-    input wire [5:0]   sum1_in;
-    input wire [5:0]   carry1_in;
-    input wire [5:0]   sum2_in;
-    input wire [5:0]   carry2_in;
+//             x1 = iter % 7;
+//             y1 = reverse_iter % 7;
 
-    output wire         c_out;
+//             #1 dummy = 1;
+//             // if($signed(x1 - y1) < 0)
+//             // begin
+//             //     dbg = x1-y1+9;
+//             // end
+//             // else
+//             // begin
+//             //     dbg = x1-y1;
+//             // end
 
-    assign c_out = (sum1_in === sum2_in) & (carry1_in === carry2_in);
 
-endmodule
+//             $display ("%d %d %d %d %d ",x1, y1, res, $signed(x1 - y1) % 7,  $signed(x1 - y1) % 7 + 7);
+//             // $display ("%d %d %b %b %d %b %b",x1, y1, ~dut.R[3], dut.T, dut.W, res, dut.R[2:0] + {2'b0, ~dut.R[3]});    
 
-// 2-bit comparator 
-module stage_d(cr_sum3_in, cr_sum2_in, cr_cout1_in, cr_sum1_in, less_out, eq_out, greater_out)
-    input wire  cr_sum3_in;
-    input wire  cr_sum2_in;
-    input wire  cr_cout1_in;
-    input wire  cr_sum1_in;
+//             #1 dummy = 1;
+//         end
 
-    output wire less_out;
-    output wire eq_out;
-    output wire greater_out;
-
-    assign less_out     =   ({cr_sum3_in, cr_sum2_in}  <  {cr_cout1_in, cr_sum1_in});
-    assign eq_out       =   ({cr_sum3_in, cr_sum2_in} === {cr_cout1_in, cr_sum1_in});
-    assign greater_out  =   ({cr_sum3_in, cr_sum2_in}  >  {cr_cout1_in, cr_sum1_in});
-
-endmodule
-
-// n-bit comparator for 1's complement numbers
-module stage_e(a2_in, b2_in, less_out, eq_out, greater_out)
-    input wire [2:0] a2_in;
-    input wire [2:0] b2_in;
-
-    output wire less_out;
-    output wire eq_out;
-    output wire greater_out;
-
-    assign less_out     = (a2_in  <  b2_in);
-    assign eq_out       = (a2_in === b2_in);
-    assign greater_out  = (a2_in  >  b2_in);
-
-endmodule
+//         $display ("!!! Succsess !!!");
+// 	end
+// endmodule
