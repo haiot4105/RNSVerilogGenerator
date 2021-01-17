@@ -5,11 +5,10 @@ import veriloggen.verilog.to_verilog as to_verilog
 from pyverilog.ast_code_generator.codegen import ASTCodeGenerator
 import re
 
-from testbench_generator import create_compare_testbench
+from testbench_generator import create_compare_const_testbench
 from pretty_print import pretty_print
 
-
-def create_compare_module(n):
+def create_compare_const_module(n, c):
     n1 = 2 ** n + 1
     n2 = 2 ** n 
     n3 = 2 ** n - 1
@@ -20,7 +19,7 @@ def create_compare_module(n):
     n3_w = n3.bit_length()
     max_num_w = max_num.bit_length()
 
-    module_name = "compare_" + str(n1) + "_" + str(n2) + "_" + str(n3)
+    module_name = "compare_" + str(n1) + "_" + str(n2) + "_" + str(n3) + "_const_" + str(c)
 
 
     main_module = Module(module_name)
@@ -29,13 +28,19 @@ def create_compare_module(n):
     a2_in = main_module.Input('a2_in', n2_w)
     a3_in = main_module.Input('a3_in', n3_w)
 
-    b1_in = main_module.Input('b1_in', n1_w)
-    b2_in = main_module.Input('b2_in', n2_w)
-    b3_in = main_module.Input('b3_in', n3_w)
+    b1_reg = main_module.Reg('b1_reg', n1_w)
+    b2_reg = main_module.Reg('b2_reg', n2_w)
+    b3_reg = main_module.Reg('b3_reg', n3_w)
+
+    main_module.Initial(b1_reg(c % n1), b2_reg(c % n2), b3_reg(c % n3))
+
 
     res_le_out = main_module.Output('res_le_out')
     res_eq_out = main_module.Output('res_eq_out')
     res_gr_out = main_module.Output('res_gr_out')
+
+
+
 
     U = main_module.Wire('U', 2 * n2_w)
     V = main_module.Wire('V', 2 * n2_w)
@@ -72,9 +77,9 @@ def create_compare_module(n):
     res_gr_out.assign(E & ~C)
 
     sub1, sub2, sub3 = create_subtracting_modules(n1_w, n2_w, n3_w, n1, n2, n3)
-    main_module.Instance(sub1, 'sub1', ports = [a1_in, b1_in, d1])
-    main_module.Instance(sub2, 'sub2', ports = [a2_in, b2_in, d2])
-    main_module.Instance(sub3, 'sub3', ports = [a3_in, b3_in, d3])
+    main_module.Instance(sub1, 'sub1', ports = [a1_in, b1_reg, d1])
+    main_module.Instance(sub2, 'sub2', ports = [a2_in, b2_reg, d2])
+    main_module.Instance(sub3, 'sub3', ports = [a3_in, b3_reg, d3])
 
     csa = create_csa_with_eac_module(n)
 
@@ -84,7 +89,6 @@ def create_compare_module(n):
     adder = create_binary_adder_module(n)
     main_module.Instance(adder, 'adder', ports = [tmp_sum2, tmp_carry2, D1])
     return main_module
-
 
 def create_subtracting_modules(n1_w, n2_w, n3_w, n1, n2, n3):
 
@@ -150,15 +154,14 @@ def create_binary_adder_module(n):
 
 
 def main():
-    comp = create_compare_module(3)
-    testbench = create_compare_testbench(3, comp)
+    comp = create_compare_const_module(3, 10)
+    testbench = create_compare_const_testbench(3, 10, comp)
     mod = pretty_print(comp, False)
     testmod = pretty_print(testbench)
-    f = open('article_compare.v', 'w')
+    f = open('article_compare_const.v', 'w')
     f.write(mod)
     f.write(testmod)
     f.close()
-
 
 if __name__ == '__main__':
     main()
