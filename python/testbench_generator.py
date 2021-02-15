@@ -150,7 +150,7 @@ begin
     #1 dummy = 1;
 end
 
-$display ("!!! Succsess !!!");'''.format((max_num / 2), (max_num / 2) - 1, n1, n2, n3, )
+$display ("!!! Succsess !!!");'''.format((max_num // 2), (max_num // 2) - 1, n1, n2, n3, )
 
     main_module.Initial(EmbeddedCode(init))
 
@@ -229,7 +229,7 @@ begin
     #1 dummy = 1;
 end
 
-$display ("!!! Succsess !!!");'''.format(c, n1, n2, n3, max_num / 2)
+$display ("!!! Succsess !!!");'''.format(c, n1, n2, n3, max_num // 2)
 
     main_module.Initial(EmbeddedCode(init))
 
