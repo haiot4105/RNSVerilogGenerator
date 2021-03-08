@@ -1,25 +1,18 @@
 
 
 
-module compare_9_8_7_const_10
+module compare_9_8_7
 (
   input [3:0] a1_in,
   input [2:0] a2_in,
   input [2:0] a3_in,
+  input [3:0] b1_in,
+  input [2:0] b2_in,
+  input [2:0] b3_in,
   output res_le_out,
   output res_eq_out,
   output res_gr_out
 );
-
-  reg [3:0] b1_reg;
-  reg [2:0] b2_reg;
-  reg [2:0] b3_reg;
-
-  initial begin
-    b1_reg = 1;
-    b2_reg = 2;
-    b3_reg = 3;
-  end
 
   wire [5:0] U;
   wire [5:0] V;
@@ -53,7 +46,7 @@ module compare_9_8_7_const_10
   sub1
   (
     .a_in(a1_in),
-    .b_in(b1_reg),
+    .b_in(b1_in),
     .res_out(d1)
   );
 
@@ -62,7 +55,7 @@ module compare_9_8_7_const_10
   sub2
   (
     .a_in(a2_in),
-    .b_in(b2_reg),
+    .b_in(b2_in),
     .res_out(d2)
   );
 
@@ -71,7 +64,7 @@ module compare_9_8_7_const_10
   sub3
   (
     .a_in(a3_in),
-    .b_in(b3_reg),
+    .b_in(b3_in),
     .res_out(d3)
   );
 
@@ -196,19 +189,19 @@ endmodule
 
 
 
-module compare_const_10_testbench_9_8_7
+module compare_testbench_9_8_7
 (
 
 );
 
-  integer const_x;
   integer iter;
-  reg [3:0] const_x1;
-  reg [2:0] const_x2;
-  reg [2:0] const_x3;
+  integer reverse_iter;
   reg [3:0] x1;
   reg [2:0] x2;
   reg [2:0] x3;
+  reg [3:0] y1;
+  reg [2:0] y2;
+  reg [2:0] y3;
   wire gr;
   wire eq;
   wire le;
@@ -220,12 +213,15 @@ module compare_const_10_testbench_9_8_7
   reg exp_le;
   reg dummy;
 
-  compare_9_8_7_const_10
+  compare_9_8_7
   dut
   (
     .a1_in(x1),
     .a2_in(x2),
     .a3_in(x3),
+    .b1_in(y1),
+    .b2_in(y2),
+    .b3_in(y3),
     .res_le_out(le),
     .res_eq_out(eq),
     .res_gr_out(gr)
@@ -233,32 +229,98 @@ module compare_const_10_testbench_9_8_7
 
 
   initial begin
-    const_x = 10;
-
-    const_x1 = const_x % 9;
-    const_x2 = const_x % 8;
-    const_x3 = const_x % 7;
-
-    for (iter = 0; iter < 252.0; iter = iter + 1)
+    $display ("!!! Stage 1 !!!");
+    for (iter = 0; iter < 126; iter = iter + 1)
     begin
+        reverse_iter = 125 - iter;
+
         x1 = iter % 9;
         x2 = iter % 8;
         x3 = iter % 7;
-        exp_gr = (iter > const_x);
-        exp_eq = (iter == const_x);
-        exp_le = (iter < const_x);
+    
+        y1 = reverse_iter % 9;
+        y2 = reverse_iter % 8;
+        y3 = reverse_iter % 7;
+
+        exp_gr = (iter > reverse_iter);
+        exp_eq = (iter == reverse_iter);
+        exp_le = (iter < reverse_iter);
+
         #1 dummy = 1;
-        $display ("Res = (> %b; = %b; < %b) Expect = (> %b; = %b; < %b)", gr, eq, le, exp_gr, exp_eq, exp_le);
 
         reg_gr = gr;
         reg_eq = eq;
         reg_le = le;
 
-        if (reg_gr != exp_gr || reg_eq != exp_eq || reg_le != exp_le )
+        if (reg_gr !== exp_gr || reg_eq !== exp_eq || reg_le !== exp_le )
         begin
-            $display ("!!! Error !!!");
-            $display ("X = (%d; %d; %d)",x1, x2, x3);
-            $finish;
+            $display ("!!! Error stage 1!!!");
+            $display ("X = (%d; %d; %d) Y = (%d; %d; %d)",x1, x2, x3, y1, y2, y3);
+            $fatal();;
+        end
+        #1 dummy = 1;
+    end
+
+    $display ("!!! Stage 2 !!!");
+
+    for (iter = 0; iter < 126; iter = iter + 1)
+    begin
+
+        x1 = iter % 9;
+        x2 = iter % 8;
+        x3 = iter % 7;
+    
+        y1 = iter % 9;
+        y2 = iter % 8;
+        y3 = iter % 7;
+
+        exp_gr = 0;
+        exp_eq = 1;
+        exp_le = 0;
+
+        #1 dummy = 1;
+
+        reg_gr = gr;
+        reg_eq = eq;
+        reg_le = le;
+
+        if (reg_gr !== exp_gr || reg_eq !== exp_eq || reg_le !== exp_le )
+        begin
+            $display ("!!! Error stage 2 !!!");
+            $display ("X = (%d; %d; %d) Y = (%d; %d; %d)",x1, x2, x3, y1, y2, y3);
+            $fatal();
+        end
+        #1 dummy = 1;
+    end
+
+    $display ("!!! Stage 3 !!!");
+    for (iter = 0; iter < 126; iter = iter + 1)
+    begin
+        reverse_iter = 125 - iter;
+
+        y1 = iter % 9;
+        y2 = iter % 8;
+        y3 = iter % 7;
+    
+        x1 = reverse_iter % 9;
+        x2 = reverse_iter % 8;
+        x3 = reverse_iter % 7;
+
+        exp_gr = (iter < reverse_iter);
+        exp_eq = (iter == reverse_iter);
+        exp_le = (iter > reverse_iter);
+
+        #1 dummy = 1;
+
+        reg_gr = gr;
+        reg_eq = eq;
+        reg_le = le;
+
+        if (reg_gr !== exp_gr || reg_eq !== exp_eq || reg_le !== exp_le )
+        begin
+            $display ("!!! Error stage 3!!!");
+            $display ("X = (%d; %d; %d) Y = (%d; %d; %d)",x1, x2, x3, y1, y2, y3);
+            $fatal();
         end
         #1 dummy = 1;
     end

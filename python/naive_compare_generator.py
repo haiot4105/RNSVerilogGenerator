@@ -44,6 +44,8 @@ def create_naive_compare_module(n):
     conv_x2 = conv_module.Input('x2', n2_w)
     conv_x3 = conv_module.Input('x3', n3_w)
     conv_out = conv_module.Output('out', max_num_w)
+
+
     main_module.Instance(conv_module, 'converter1', ports = [a1_in, a2_in, a3_in, a_bin_form])
     main_module.Instance(conv_module, 'converter2', ports = [b1_in, b2_in, b3_in, b_bin_form])
 
@@ -91,6 +93,7 @@ def create_naive_compare_const_module(n, c):
     conv_x2 = conv_module.Input('x2', n2_w)
     conv_x3 = conv_module.Input('x3', n3_w)
     conv_out = conv_module.Output('out', max_num_w)
+
     main_module.Instance(conv_module, 'converter', ports = [a1_in, a2_in, a3_in, bin_form])
 
 

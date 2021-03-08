@@ -8,6 +8,7 @@ def main():
     basis_n = -1
     comp_type = "num"
     const_val = -1
+    test_cases = 2000
 
     method = ""
     output = "file"
@@ -26,11 +27,13 @@ def main():
     parser.add_argument('-p', '--print', help='Print result to std output', dest='print', action='store_true')
     parser.add_argument('-t', '--testbench', help='Generate testbench', dest='tb', action='store_true')
 
+    parser.add_argument('-k', '--testcases', help='Set the number of testcases, when n > 7 (Defaut: 2000). he number of test cases must be greater then 0 and less 65536', dest='tc', type=int)
 
     parser.set_defaults(print=False)
     parser.set_defaults(tb=False)
+    parser.set_defaults(tc=2000)
     parser.set_defaults(const=-1)
-    parser.set_defaults(output="")
+    parser.set_defaults(output="a.v")
 
     args = parser.parse_args()
 
@@ -43,9 +46,14 @@ def main():
     method = args.method
     file_path = args.output
     test_enable = args.tb
+    if test_enable:
+        if 0 < args.tc < 65536:
+            test_cases = args.tc
+        else:
+            print("The number of test cases must be greater then 0 and less 65536. TC was set to 2000")
+
     print_enable = args.print
 
-    print(basis_n)
     n1 = 2 ** basis_n + 1
     n2 = 2 ** basis_n 
     n3 = 2 ** basis_n - 1
@@ -82,11 +90,14 @@ def main():
             comp_module = create_lei_li_2013_compare_module(basis_n)
             module_str = pretty_print(comp_module, False)
 
+    method_max_num = max_val if (method == "naive") else max_val // 2
+
     if (test_enable):
+        full_test = True if basis_n < 8 else False
         if (comp_type == "const"):
-            testbench = create_compare_const_testbench(basis_n, const_val, comp_module)
+            testbench = create_compare_const_testbench(basis_n, const_val, comp_module, method_max_num, full_test, test_cases)
         if (comp_type == "num"):
-            testbench = create_compare_testbench(basis_n, comp_module)
+            testbench = create_compare_testbench(basis_n, comp_module, method_max_num, full_test, test_cases)
         testbench = pretty_print(testbench)
 
     if (len(file_path) > 0):

@@ -43,7 +43,7 @@ module compare_9_8_7
 endmodule
 
 
-module compare__testbench_9_8_7
+module compare_testbench_9_8_7
 (
 
 );
@@ -84,9 +84,9 @@ module compare__testbench_9_8_7
 
   initial begin
     $display ("!!! Stage 1 !!!");
-    for (iter = 0; iter < 252.0; iter = iter + 1)
+    for (iter = 0; iter < 503; iter = iter + 1)
     begin
-        reverse_iter = 251.0 - iter;
+        reverse_iter = 502 - iter;
 
         x1 = iter % 9;
         x2 = iter % 8;
@@ -102,24 +102,22 @@ module compare__testbench_9_8_7
 
         #1 dummy = 1;
 
-        $display ("Res = (> %b; = %b; < %b) Expect = (> %b; = %b; < %b)", gr, eq, le, exp_gr, exp_eq, exp_le);
-
         reg_gr = gr;
         reg_eq = eq;
         reg_le = le;
 
-        if (reg_gr != exp_gr || reg_eq != exp_eq || reg_le != exp_le )
+        if (reg_gr !== exp_gr || reg_eq !== exp_eq || reg_le !== exp_le )
         begin
             $display ("!!! Error stage 1!!!");
             $display ("X = (%d; %d; %d) Y = (%d; %d; %d)",x1, x2, x3, y1, y2, y3);
-            $finish;
+            $fatal();;
         end
         #1 dummy = 1;
     end
 
     $display ("!!! Stage 2 !!!");
 
-    for (iter = 0; iter < 252.0; iter = iter + 1)
+    for (iter = 0; iter < 503; iter = iter + 1)
     begin
 
         x1 = iter % 9;
@@ -136,25 +134,23 @@ module compare__testbench_9_8_7
 
         #1 dummy = 1;
 
-        $display ("Res = (> %b; = %b; < %b) Expect = (> %b; = %b; < %b)", gr, eq, le, exp_gr, exp_eq, exp_le);
-
         reg_gr = gr;
         reg_eq = eq;
         reg_le = le;
 
-        if (reg_gr != exp_gr || reg_eq != exp_eq || reg_le != exp_le )
+        if (reg_gr !== exp_gr || reg_eq !== exp_eq || reg_le !== exp_le )
         begin
             $display ("!!! Error stage 2 !!!");
             $display ("X = (%d; %d; %d) Y = (%d; %d; %d)",x1, x2, x3, y1, y2, y3);
-            $finish;
+            $fatal();
         end
         #1 dummy = 1;
     end
 
     $display ("!!! Stage 3 !!!");
-    for (iter = 0; iter < 252.0; iter = iter + 1)
+    for (iter = 0; iter < 503; iter = iter + 1)
     begin
-        reverse_iter = 251.0 - iter;
+        reverse_iter = 502 - iter;
 
         y1 = iter % 9;
         y2 = iter % 8;
@@ -170,17 +166,15 @@ module compare__testbench_9_8_7
 
         #1 dummy = 1;
 
-        $display ("Res = (> %b; = %b; < %b) Expect = (> %b; = %b; < %b)", gr, eq, le, exp_gr, exp_eq, exp_le);
-
         reg_gr = gr;
         reg_eq = eq;
         reg_le = le;
 
-        if (reg_gr != exp_gr || reg_eq != exp_eq || reg_le != exp_le )
+        if (reg_gr !== exp_gr || reg_eq !== exp_eq || reg_le !== exp_le )
         begin
             $display ("!!! Error stage 3!!!");
             $display ("X = (%d; %d; %d) Y = (%d; %d; %d)",x1, x2, x3, y1, y2, y3);
-            $finish;
+            $fatal();
         end
         #1 dummy = 1;
     end
